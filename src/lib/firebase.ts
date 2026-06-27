@@ -51,6 +51,19 @@ export interface ResolutionInfo {
   verifiedByAI?: boolean;
 }
 
+export interface ActionPlan {
+  department: string;
+  tools: string[];
+  safety: string[];
+  priority: string;
+}
+
+export interface ImpactMetrics {
+  carbonOffset: number; // in KG CO2
+  monetarySavings: number; // in INR
+  safetyBoost: number; // in %
+}
+
 export interface Issue {
   id?: string;
   category: string;
@@ -75,6 +88,8 @@ export interface Issue {
   comments?: Comment[];
   statusHistory?: StatusHistoryItem[];
   resolution?: ResolutionInfo;
+  actionPlan?: ActionPlan;
+  impactMetrics?: ImpactMetrics;
 }
 
 // ── Fallback In-Memory/LocalStorage Database ───────────────────
@@ -110,7 +125,13 @@ const initialMockIssues: Issue[] = [
         timestamp: new Date(Date.now() - 120000).toISOString(),
         user: "Aarav Mehta"
       }
-    ]
+    ],
+    actionPlan: {
+      department: "Road Maintenance Division",
+      tools: ["Cold-mix asphalt patch", "Vibratory tamper", "Safety cones"],
+      safety: ["Divert vehicle traffic", "Wear high-visibility clothing"],
+      priority: "High"
+    }
   },
   {
     id: "mock-2",
@@ -153,7 +174,13 @@ const initialMockIssues: Issue[] = [
         timestamp: new Date(Date.now() - 300000).toISOString(),
         user: "Delhi Power Discom"
       }
-    ]
+    ],
+    actionPlan: {
+      department: "Municipal Power Grid Dept",
+      tools: ["Bucket truck", "Replacement LED luminaire", "Multimeter"],
+      safety: ["High-voltage insulation gloves", "Secure work zone"],
+      priority: "Medium"
+    }
   },
   {
     id: "mock-3",
@@ -196,6 +223,17 @@ const initialMockIssues: Issue[] = [
       explanation: "AI visual validator confirmed the sanitation overflow has been cleared. Bin load index: 0.12.",
       timestamp: new Date(Date.now() - 1800000).toISOString(),
       verifiedByAI: true
+    },
+    actionPlan: {
+      department: "Sanitation & Solid Waste Management",
+      tools: ["Compactor truck", "Cleaning disinfectant spray", "Replacement liners"],
+      safety: ["Industrial waste gloves", "Pathogen protection masks"],
+      priority: "Low"
+    },
+    impactMetrics: {
+      carbonOffset: 18.5,
+      monetarySavings: 8400,
+      safetyBoost: 24
     }
   }
 ];
@@ -240,12 +278,24 @@ export async function uploadImage(file: File): Promise<string> {
 
 // ── Firestore Write Issue Helper ────────────────────────────────
 export async function addIssue(issueData: Omit<Issue, "id" | "timestamp" | "upvotes">): Promise<string> {
+  // Generate initial agent dispatcher comments if Action Plan exists
+  const initialComments: Comment[] = [];
+  if (issueData.actionPlan) {
+    initialComments.push({
+      id: `agent-comment-${Date.now()}`,
+      user: "CivicPulse Agent",
+      role: "Autonomous Dispatcher",
+      text: `Work order created and routed to ${issueData.actionPlan.department}. Assigned priority: ${issueData.actionPlan.priority}. Recommended tools: ${issueData.actionPlan.tools.join(", ")}.`,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   if (isFirebaseConfigured && db) {
     const docRef = await addDoc(collection(db, "issues"), {
       ...issueData,
       upvotes: 0,
       timestamp: serverTimestamp(),
-      comments: [],
+      comments: initialComments,
       statusHistory: [
         {
           status: issueData.status || "reported",
@@ -264,7 +314,7 @@ export async function addIssue(issueData: Omit<Issue, "id" | "timestamp" | "upvo
       id: newId,
       upvotes: 0,
       timestamp: new Date().toISOString(),
-      comments: [],
+      comments: initialComments,
       statusHistory: [
         {
           status: issueData.status || "reported",
@@ -438,6 +488,33 @@ export async function updateIssueStatus(
         
         if (resolution) {
           updatedIssue.resolution = resolution;
+          
+          // Generate realistic impact metrics based on the category
+          let carbonOffset = 5.2;
+          let monetarySavings = 3200;
+          let safetyBoost = 15;
+          
+          const cat = (issue.category || "").toLowerCase();
+          if (cat.includes("road")) {
+            carbonOffset = 8.5;
+            monetarySavings = 45000; // savings in vehicle suspension repairs
+            safetyBoost = 35;
+          } else if (cat.includes("safety") || cat.includes("light")) {
+            carbonOffset = 1.2;
+            monetarySavings = 12000;
+            safetyBoost = 60; // huge safety boost for lighting
+          } else if (cat.includes("sanit") || cat.includes("trash")) {
+            carbonOffset = 24.0; // high carbon offset for sanitation decay prevention
+            monetarySavings = 5400;
+            safetyBoost = 20;
+          }
+          
+          updatedIssue.impactMetrics = {
+            carbonOffset,
+            monetarySavings,
+            safetyBoost
+          };
+          
           // Award 50 XP to the resolver!
           addUserXP(50);
           awardBadge("solver");

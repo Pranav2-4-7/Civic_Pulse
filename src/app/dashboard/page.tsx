@@ -40,6 +40,14 @@ export default function DashboardPage() {
   const [aiReport, setAiReport] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
+  // Derived Community Impact Stats
+  const resolvedIssues = issues.filter(i => i.status === "resolved");
+  const totalCarbonOffset = resolvedIssues.reduce((sum, i) => sum + (i.impactMetrics?.carbonOffset || 0), 0);
+  const totalMonetarySavings = resolvedIssues.reduce((sum, i) => sum + (i.impactMetrics?.monetarySavings || 0), 0);
+  const totalSafetyBoost = resolvedIssues.reduce((sum, i) => sum + (i.impactMetrics?.safetyBoost || 0), 0);
+  const resolvedCount = resolvedIssues.length;
+  const avgSafetyBoost = resolvedCount > 0 ? Math.round(totalSafetyBoost / resolvedCount) : 0;
+
   // Set current time baseline on mount
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -491,6 +499,67 @@ export default function DashboardPage() {
                 <p className="text-xs text-[#b9cacb] mt-1">AI modeling of neighborhood hazard vulnerabilities based on report telemetry.</p>
               </div>
 
+              {/* Community Impact Statistics Console */}
+              <div className="glass-card p-6 rounded-xl border border-[#00f0ff]/20 bg-[#0d1522]/50 relative overflow-hidden shadow-[0_0_25px_rgba(0,240,255,0.03)]">
+                {/* Background decorative glows */}
+                <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-[#00f0ff]/5 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-[#2ae500]/5 blur-3xl pointer-events-none" />
+
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 border-b border-[#3b494b]/15 pb-4">
+                  <div>
+                    <h3 className="font-mono text-sm font-bold text-[#dbfcff] flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#00f0ff] text-[20px] animate-pulse">analytics</span>
+                      <span>🌿 COMMUNITY IMPACT CONSOLE</span>
+                    </h3>
+                    <p className="text-[11px] text-[#b9cacb] mt-0.5">Real-time ledger of sustainability and economic dividends from civic resolutions.</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/20 px-2 py-0.5 rounded tracking-wider uppercase">
+                    Consolidated telemetry
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Card 1: Carbon Offsets */}
+                  <div className="bg-[#0b0e14]/65 border border-[#3b494b]/20 p-4 rounded-xl flex items-center gap-4 hover:border-[#2ae500]/30 transition-all duration-300">
+                    <div className="w-12 h-12 rounded-lg bg-[#2ae500]/10 border border-[#2ae500]/20 flex items-center justify-center text-[#2ae500] shadow-[0_0_12px_rgba(42,229,0,0.1)]">
+                      <span className="material-symbols-outlined text-[28px]">eco</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-[#b9cacb] uppercase block">Carbon Avoided</span>
+                      <span className="text-xl font-bold font-mono text-[#dbfcff] mt-0.5 block tracking-tight">
+                        {totalCarbonOffset.toFixed(1)} <span className="text-xs text-[#2ae500]">KG CO₂</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Commuter Savings */}
+                  <div className="bg-[#0b0e14]/65 border border-[#3b494b]/20 p-4 rounded-xl flex items-center gap-4 hover:border-[#00f0ff]/30 transition-all duration-300">
+                    <div className="w-12 h-12 rounded-lg bg-[#00f0ff]/10 border border-[#00f0ff]/20 flex items-center justify-center text-[#00f0ff] shadow-[0_0_12px_rgba(0,240,255,0.1)]">
+                      <span className="material-symbols-outlined text-[28px]">payments</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-[#b9cacb] uppercase block">Citizen Economic Relief</span>
+                      <span className="text-xl font-bold font-mono text-[#dbfcff] mt-0.5 block tracking-tight">
+                        ₹{totalMonetarySavings.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Safety Audits / Resolutions */}
+                  <div className="bg-[#0b0e14]/65 border border-[#3b494b]/20 p-4 rounded-xl flex items-center gap-4 hover:border-amber-500/30 transition-all duration-300">
+                    <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
+                      <span className="material-symbols-outlined text-[28px]">verified_user</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-[#b9cacb] uppercase block">Resolved Safety Audits</span>
+                      <span className="text-xl font-bold font-mono text-[#dbfcff] mt-0.5 block tracking-tight">
+                        {resolvedCount} <span className="text-xs text-amber-400">({resolvedCount > 0 ? `+${avgSafetyBoost}% Boost` : "N/A"})</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Risk Panel 1 */}
                 <div className="glass-card p-5 rounded-xl border border-[#3b494b]/20 relative">
@@ -822,6 +891,64 @@ export default function DashboardPage() {
                 <span className="material-symbols-outlined text-[#00f0ff]">location_on</span>
                 <span className="font-mono">Grid Coordinate: {selectedIssue.location.grid}</span>
               </div>
+
+              {/* Action Plan Section */}
+              {selectedIssue.actionPlan && (
+                <div className="space-y-2 p-4 bg-[#0d1522] border border-[#2b3a51]/50 rounded-xl">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#00f0ff] uppercase tracking-wide">
+                    <span className="material-symbols-outlined text-[16px]">engineering</span>
+                    <span>🤖 AI Autonomous Action Plan</span>
+                  </div>
+                  <div className="text-xs space-y-2 text-[#c2c6d6] leading-relaxed">
+                    <p><strong className="text-[#dbfcff]">Assigned Dept:</strong> {selectedIssue.actionPlan.department}</p>
+                    <p><strong className="text-[#dbfcff]">Urgency Priority:</strong> <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${
+                      selectedIssue.actionPlan.priority.toLowerCase().includes("high") || selectedIssue.actionPlan.priority.toLowerCase().includes("critical")
+                        ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        : "bg-[#00f0ff]/10 text-[#00f0ff] border border-[#00f0ff]/20"
+                    }`}>{selectedIssue.actionPlan.priority}</span></p>
+                    <div>
+                      <strong className="text-[#dbfcff] block mb-1">Recommended Tools:</strong>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedIssue.actionPlan.tools.map((t, idx) => (
+                          <span key={idx} className="bg-[#182535] border border-[#2c3d52] px-2 py-0.5 rounded text-[10px] font-mono">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="pt-1 border-t border-[#2b3a51]/20">
+                      <strong className="text-[#dbfcff] block mb-1">Crew Safety Protocols:</strong>
+                      <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-[#b9cacb]">
+                        {selectedIssue.actionPlan.safety.map((s, idx) => (
+                          <li key={idx}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Resolved Impact Metrics */}
+              {selectedIssue.status === "resolved" && selectedIssue.impactMetrics && (
+                <div className="space-y-2 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl glow-sanitation">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 uppercase tracking-wide">
+                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                    <span>🌿 Verified Community Impact Ledger</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div className="bg-[#112521] border border-emerald-500/15 p-2 rounded">
+                      <span className="text-[9px] font-mono text-emerald-400 block">CO2 OFFSETS</span>
+                      <span className="text-sm font-bold font-mono text-[#dbfcff] mt-0.5 block">{selectedIssue.impactMetrics.carbonOffset.toFixed(1)} KG</span>
+                    </div>
+                    <div className="bg-[#112521] border border-emerald-500/15 p-2 rounded">
+                      <span className="text-[9px] font-mono text-emerald-400 block">FUNDS SAVED</span>
+                      <span className="text-sm font-bold font-mono text-[#dbfcff] mt-0.5 block">₹{selectedIssue.impactMetrics.monetarySavings.toLocaleString()}</span>
+                    </div>
+                    <div className="bg-[#112521] border border-emerald-500/15 p-2 rounded">
+                      <span className="text-[9px] font-mono text-emerald-400 block">SAFETY BOOST</span>
+                      <span className="text-sm font-bold font-mono text-[#dbfcff] mt-0.5 block">+{selectedIssue.impactMetrics.safetyBoost}%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Timeline (Status History) */}
               <div className="space-y-3">

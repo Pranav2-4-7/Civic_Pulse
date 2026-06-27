@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         { inlineData: { mimeType, data: base64Data } }
       ],
       config: {
-        systemInstruction: "You are an expert civic issue visual analyzer. Carefully evaluate the visual evidence in the image (such as potholes, broken lights, trash, or safety hazards) to classify it into appropriate categories and provide a technical summary. Always choose standard categories (Roads, Public Safety, Sanitation, Infrastructure) and provide exact severity assessment LEVEL 1 to 4.",
+        systemInstruction: "You are an expert civic issue visual analyzer. Carefully evaluate the visual evidence in the image (such as potholes, broken lights, trash, or safety hazards) to classify it into appropriate categories, provide a technical summary, and generate an autonomous dispatch action plan. Always choose standard categories (Roads, Public Safety, Sanitation, Infrastructure) and provide exact severity assessment LEVEL 1 to 4.",
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -57,9 +57,34 @@ export async function POST(req: Request) {
               type: "ARRAY", 
               items: { type: "STRING" }, 
               description: "Keywords related to the issue." 
+            },
+            actionPlan: {
+              type: "OBJECT",
+              description: "An autonomous repair dispatch work order details.",
+              properties: {
+                department: { 
+                  type: "STRING", 
+                  description: "The municipal agency responsible for repairing this issue, e.g. 'Road Maintenance Division', 'City Power Grid Department', 'Sanitation & Solid Waste Management'." 
+                },
+                tools: { 
+                  type: "ARRAY", 
+                  items: { type: "STRING" }, 
+                  description: "Tools, materials, and equipment required to resolve the issue (e.g. cold-mix asphalt, LED luminaires, replacement bags)." 
+                },
+                safety: { 
+                  type: "ARRAY", 
+                  items: { type: "STRING" }, 
+                  description: "Recommended safety rules for repair crews and citizens during operations (e.g. traffic cones, high-voltage gloves)." 
+                },
+                priority: { 
+                  type: "STRING", 
+                  description: "Routing dispatch urgency priority: Low, Medium, High, or Critical." 
+                }
+              },
+              required: ["department", "tools", "safety", "priority"]
             }
           },
-          required: ["category", "subcategory", "severity", "short_summary", "keywords"]
+          required: ["category", "subcategory", "severity", "short_summary", "keywords", "actionPlan"]
         }
       }
     });
@@ -91,6 +116,13 @@ export async function POST(req: Request) {
     let severity = "LEVEL 3";
     let short_summary = "Visual anomalies detected on asphalt surface. Structural pavement deformation observed. (Note: Gemini API is disabled or key is inactive, running in local fallback mode)";
     let keywords = ["pothole", "asphalt", "local-fallback"];
+    
+    let actionPlan = {
+      department: "Road Maintenance Division (Local Fallback)",
+      tools: ["Cold-mix asphalt patch", "Vibratory tamper", "Safety cones"],
+      safety: ["Divert vehicle traffic", "Wear high-visibility clothing"],
+      priority: "High"
+    };
 
     if (fileNameLower.includes("light") || fileNameLower.includes("lamp") || fileNameLower.includes("dark") || fileNameLower.includes("bulb") || fileNameLower.includes("night")) {
       category = "Public Safety";
@@ -98,12 +130,24 @@ export async function POST(req: Request) {
       severity = "LEVEL 2";
       short_summary = "Luminance threshold is zero. Dark corridor defect detected. (Note: Gemini API is disabled or key is inactive, running in local fallback mode)";
       keywords = ["lighting", "darkness", "local-fallback"];
+      actionPlan = {
+        department: "Municipal Power Grid Dept (Local Fallback)",
+        tools: ["Bucket truck", "Replacement LED luminaire", "Multimeter"],
+        safety: ["High-voltage insulation gloves", "Secure work zone"],
+        priority: "Medium"
+      };
     } else if (fileNameLower.includes("trash") || fileNameLower.includes("bin") || fileNameLower.includes("waste") || fileNameLower.includes("overflow") || fileNameLower.includes("garbage") || fileNameLower.includes("litter")) {
       category = "Sanitation";
       subcategory = "Recycling Overflow (Local Fallback)";
       severity = "LEVEL 2";
       short_summary = "Volumetric bin capacity exceeded. Refuse accumulation on footpaths. (Note: Gemini API is disabled or key is inactive, running in local fallback mode)";
       keywords = ["trash", "recycling", "local-fallback"];
+      actionPlan = {
+        department: "Sanitation & Solid Waste Management (Local Fallback)",
+        tools: ["Compactor truck", "Cleaning disinfectant spray", "Replacement liners"],
+        safety: ["Industrial waste gloves", "Pathogen protection masks"],
+        priority: "Low"
+      };
     }
 
     return NextResponse.json({
@@ -111,7 +155,8 @@ export async function POST(req: Request) {
       subcategory,
       severity,
       short_summary,
-      keywords
+      keywords,
+      actionPlan
     });
   }
 }
