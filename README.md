@@ -24,7 +24,7 @@
 
 ### 4. 🛠️ Before/After AI Resolution Auditing
 *   **Volunteer Solver Protocol**: Citizens can act as "Volunteer Solvers" by fixing local issues themselves.
-*   **AI Visual Verification**: Solvers upload a photo of the completed repair. CivicPulse queries the Gemini model to analyze and compare the "before" and "after" images, verifying if the issue is resolved before closing the ticket.
+*   **AI Visual Verification**: Solvers upload a photo of the completed repair. CivicPulse queries the Gemini model to analyze and compare the "before" and "after" images, verifying if the issue is resolved before closing the ticket
 
 ### 5. 🔮 Municipal Policy Advisory Console
 *   **Telemetry Aggregator**: Synthesizes neighborhood-wide active reports.
@@ -37,6 +37,11 @@
 
 ### 🛡️ Robust Local Fallback Network
 *   If your Gemini API key is missing or Google's free-tier servers return a `503 Service Unavailable` error, the API routes automatically switch to a **local rule-based logic engine**, keeping the entire app fully functional and interactive.
+
+### 📍 Geolocation System & Fallbacks
+*   **GPS Coordinate Acquisition**: Queries high-accuracy GPS coordinates first, falling back automatically to WiFi/IP-based geolocation on laptops/desktops to prevent timeouts or errors.
+*   **Map Selector UI**: An interactive draggable marker selector map that allows residents to manually point-and-click or refine their coordinates.
+*   **Permissions Handling**: Full handling of browser geolocation permission states with custom guides for Chrome, Firefox, Safari, and Brave.
 
 ---
 
